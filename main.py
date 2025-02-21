@@ -88,6 +88,30 @@ def get_videos_from_youtube_channel(api_key, profile_url):
         'videos': videos
     }
 
+# Function to fetch video statistics (views, likes) for multiple videos
+def get_video_statistics(api_key, video_ids):
+    youtube = build('youtube', 'v3', developerKey=api_key)
+    stats = {}
+
+    # YouTube API allows a maximum of 50 video IDs per request
+    for i in range(0, len(video_ids), 50):
+        batch_ids = video_ids[i:i + 50]
+        request = youtube.videos().list(
+            part='statistics',
+            id=','.join(batch_ids)
+        )
+        response = request.execute()
+
+        # Extract views and likes for each video
+        for item in response.get('items', []):
+            video_id = item['id']
+            stats[video_id] = {
+                'views': int(item['statistics'].get('viewCount', 0)),
+                'likes': int(item['statistics'].get('likeCount', 0))
+            }
+    return stats
+
+# Function to fetch the top N videos from a channel
 def get_top_videos(api_key, profile_url, top_n=5):
     # Fetch videos and subscription count
     channel_data = get_videos_from_youtube_channel(api_key, profile_url)
@@ -98,12 +122,13 @@ def get_top_videos(api_key, profile_url, top_n=5):
     video_ids = [video['video_id'] for video in videos]
     stats = get_video_statistics(api_key, video_ids)
 
+    # Add views and likes to each video
     for video in videos:
         video_id = video['video_id']
-        video['views'] = stats[video_id]['views']
-        video['likes'] = stats[video_id]['likes']
+        video['views'] = stats.get(video_id, {}).get('views', 0)
+        video['likes'] = stats.get(video_id, {}).get('likes', 0)
 
-    # Sort videos based on views and likes (weigh views more heavily here, adjust as needed)
+    # Sort videos based on views and likes (primary = views, secondary = likes)
     videos.sort(key=lambda x: (x['views'], x['likes']), reverse=True)
 
     return {
