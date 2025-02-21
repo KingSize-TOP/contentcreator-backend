@@ -34,60 +34,67 @@ def get_channel_id_from_username(api_key, username):
         raise ValueError("Channel not found for the given username.")
 
 def get_videos_from_youtube_channel(api_key, profile_url):
+    # Extract username from profile URL
     match = re.match(r'https://www\.youtube\.com/@([^/]+)', profile_url)
     if match:
         username = match.group(1)
     else:
         raise ValueError("Invalid YouTube profile URL format.")
 
+    # Get channel ID
     channel_id = get_channel_id_from_username(api_key, username)
+
+    # Fetch channel details to get subscription count
     youtube = build('youtube', 'v3', developerKey=api_key)
-    request = youtube.channels().list(
+    channel_request = youtube.channels().list(
+        part='statistics',
+        id=channel_id
+    )
+    channel_response = channel_request.execute()
+    subscription_count = int(channel_response['items'][0]['statistics']['subscriberCount'])
+
+    # Get the upload playlist ID
+    playlist_request = youtube.channels().list(
         part='contentDetails',
         id=channel_id
     )
-    response = request.execute()
-    playlist_id = response['items'][0]['contentDetails']['relatedPlaylists']['uploads']
+    playlist_response = playlist_request.execute()
+    playlist_id = playlist_response['items'][0]['contentDetails']['relatedPlaylists']['uploads']
 
+    # Fetch videos from the playlist
     videos = []
-    request = youtube.playlistItems().list(
+    playlist_items_request = youtube.playlistItems().list(
         part='snippet',
         playlistId=playlist_id,
         maxResults=50
     )
 
-    while request:
-        response = request.execute()
-        for item in response['items']:
+    while playlist_items_request:
+        playlist_items_response = playlist_items_request.execute()
+        for item in playlist_items_response['items']:
             video_id = item['snippet']['resourceId']['videoId']
             video_title = item['snippet']['title']
-            videos.append({'video_id': video_id, 'title': video_title})
+            video_thumbnail = item['snippet']['thumbnails']['high']['url']  # Get high-resolution thumbnail
+            videos.append({
+                'video_id': video_id,
+                'title': video_title,
+                'thumbnail': video_thumbnail
+            })
 
-        request = youtube.playlistItems().list_next(request, response)
+        playlist_items_request = youtube.playlistItems().list_next(playlist_items_request, playlist_items_response)
 
-    return videos
-
-def get_video_statistics(api_key, video_ids):
-    youtube = build('youtube', 'v3', developerKey=api_key)
-    stats = {}
-
-    # Process video IDs in batches of 50
-    for i in range(0, len(video_ids), 50):
-        batch_ids = video_ids[i:i + 50]
-        request = youtube.videos().list(
-            part='statistics',
-            id=','.join(batch_ids)
-        )
-        response = request.execute()
-        for item in response['items']:
-            video_id = item['id']
-            view_count = int(item['statistics'].get('viewCount', 0))
-            like_count = int(item['statistics'].get('likeCount', 0))
-            stats[video_id] = {'views': view_count, 'likes': like_count}
-    return stats
+    return {
+        'subscription_count': subscription_count,
+        'videos': videos
+    }
 
 def get_top_videos(api_key, profile_url, top_n=5):
-    videos = get_videos_from_youtube_channel(api_key, profile_url)
+    # Fetch videos and subscription count
+    channel_data = get_videos_from_youtube_channel(api_key, profile_url)
+    videos = channel_data['videos']
+    subscription_count = channel_data['subscription_count']
+
+    # Get video statistics (views and likes)
     video_ids = [video['video_id'] for video in videos]
     stats = get_video_statistics(api_key, video_ids)
 
@@ -99,7 +106,10 @@ def get_top_videos(api_key, profile_url, top_n=5):
     # Sort videos based on views and likes (weigh views more heavily here, adjust as needed)
     videos.sort(key=lambda x: (x['views'], x['likes']), reverse=True)
 
-    return videos[:top_n]
+    return {
+        'subscription_count': subscription_count,
+        'top_videos': videos[:top_n]
+    }
 
 def download_audio(video_url, output_format='wav'):
     ydl_opts = {
