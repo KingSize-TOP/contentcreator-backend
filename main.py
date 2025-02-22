@@ -304,7 +304,7 @@ def download_video(video_url, output_filename):
 
 
 @app.get("/videos")
-def get_videos(profile_url: str, offset: int = Query(0, ge=0), limit: int = Query(5, ge=1, le=50)):
+def get_videos(profile_url: str, offset: int, limit: int):
     all_videos = get_sorted_videos(api_key, profile_url)
     paginated_videos = all_videos[offset : offset + limit]
     return {
