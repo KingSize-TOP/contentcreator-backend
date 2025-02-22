@@ -219,10 +219,11 @@ def generate_similar_text(transcription, openai_api_key):
             {"role": "user", "content": transcription}
         ],
         max_tokens=150,
-        temperature=0.7
+        temperature=0.7,
+        n=3
     )
 
-    return response.choices[0].message.content
+    return [choice.message.content for choice in response.choices]
 
 def generate_avatar(transcription, heygen_key):
     gen_avatar_url = "https://api.heygen.com/v2/video/generate"
