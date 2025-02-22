@@ -314,7 +314,7 @@ def get_videos(profile_url: str, offset: int, limit: int):
 
 @app.get("/transcript_video")
 def get_videos(video_id: str):
-    youtube_url = f"https://www.youtube.com/watch?v={video['video_id']}"
+    youtube_url = f"https://www.youtube.com/watch?v={video_id}"
     transcription = process_video(youtube_url)
     return transcription
 
