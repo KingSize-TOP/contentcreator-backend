@@ -121,7 +121,7 @@ def get_video_statistics(api_key, video_ids):
     return stats
 
 # Function to fetch the top N videos from a channel
-def get_top_videos(api_key, profile_url, top_n=5):
+def get_sorted_videos(api_key, profile_url):
     # Fetch videos and subscription count
     channel_data = get_videos_from_youtube_channel(api_key, profile_url)
     videos = channel_data['videos']
@@ -140,10 +140,7 @@ def get_top_videos(api_key, profile_url, top_n=5):
     # Sort videos based on views and likes (primary = views, secondary = likes)
     videos.sort(key=lambda x: (x['views'], x['likes']), reverse=True)
 
-    return {
-        'subscription_count': subscription_count,
-        'top_videos': videos[:top_n]
-    }
+    return videos;
 
 def download_audio(video_url, output_format='wav'):
     ydl_opts = {
@@ -307,9 +304,13 @@ def download_video(video_url, output_filename):
 
 
 @app.get("/videos")
-def get_videos(profile_url: str):
-    top_videos = get_top_videos(api_key, profile_url, 5)
-    return top_videos
+def get_videos(profile_url: str, offset: int = Query(0, ge=0), limit: int = Query(5, ge=1, le=50)):
+    all_videos = get_sorted_videos(api_key, profile_url)
+    paginated_videos = all_videos[offset : offset + limit]
+    return {
+        "videos": paginated_videos,
+        "next_offset": offset + limit if offset + limit < len(all_videos) else None,
+    }
 
 @app.get("/transcript_video")
 def get_videos(video_id: str):
