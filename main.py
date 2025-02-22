@@ -151,7 +151,7 @@ def download_audio(video_url, output_format='wav'):
             'preferredquality': '192'
         }],
         'outtmpl': 'audio.%(ext)s',
-        'cookiefile': 'cookies.txt',
+        'nocheckcertificate': True, 
     }
     with youtube_dl.YoutubeDL(ydl_opts) as ydl:
         ydl.download([video_url])
