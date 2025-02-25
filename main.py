@@ -266,6 +266,18 @@ def generate_avatar(transcription, heygen_key):
 
     return response.json()
 
+def get_avatar_list(heygen_key):
+    get_avatar_url = "https://api.heygen.com/v2/avatars"
+    headers = {"accept": "application/json", "x-api-key": heygen_key}
+    response = request.get(get_avatar_url, headers=headers)
+    return response.json()
+
+def get_voice_list(heygen_key):
+    get_voice_url = "https://api.heygen.com/v2/voices"
+    headers = {"accept": "application/json", "x-api-key": heygen_key}
+    response = request.get(get_voice_url, headers=headers)
+    return response.json()
+
 def check_video_status(heygen_key, video_id):
     status_url = f"https://api.heygen.com/v1/video_status.get?video_id={video_id}"
     headers = {"accept": "application/json", "x-api-key": heygen_key}
@@ -331,3 +343,13 @@ def generate_video(text: str):
     video_id = response.get("data").get("video_id")
     video_url = check_video_status(heygen_key, video_id)
     return video_url
+
+@app.get("/avatar_list")
+def fetch_avatar_list():
+    response = get_avatar_list(heygen_key)
+    return response.get("data").get("avatars")
+
+@app.get("/voice_list")
+def fetch_voice_list():
+    response = get_voice_list(heygen_key)
+    return response.get("data").get("voices")
