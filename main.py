@@ -10,6 +10,8 @@ import yt_dlp as youtube_dl
 import time
 import requests
 import openai
+from datetime import timedelta
+import isodate
 
 app = FastAPI()
 # Add CORS middleware
@@ -106,7 +108,7 @@ def get_video_statistics(api_key, video_ids):
     for i in range(0, len(video_ids), 50):
         batch_ids = video_ids[i:i + 50]
         request = youtube.videos().list(
-            part='statistics',
+            part='statistics, contentDetails',
             id=','.join(batch_ids)
         )
         response = request.execute()
@@ -114,9 +116,12 @@ def get_video_statistics(api_key, video_ids):
         # Extract views and likes for each video
         for item in response.get('items', []):
             video_id = item['id']
+            duration_iso = item['contentDetails']['duration']
+            duration = isodate.parse_duration(duration_iso)
             stats[video_id] = {
                 'views': int(item['statistics'].get('viewCount', 0)),
-                'likes': int(item['statistics'].get('likeCount', 0))
+                'likes': int(item['statistics'].get('likeCount', 0)),
+                'duration': str(duration)
             }
     return stats
 
@@ -136,6 +141,7 @@ def get_sorted_videos(api_key, profile_url):
         video_id = video['video_id']
         video['views'] = stats.get(video_id, {}).get('views', 0)
         video['likes'] = stats.get(video_id, {}).get('likes', 0)
+        video['duration'] = stats.get(video_id, {}).get('duration', '0:00:00')
 
     # Sort videos based on views and likes (primary = views, secondary = likes)
     videos.sort(key=lambda x: (x['views'], x['likes']), reverse=True)
