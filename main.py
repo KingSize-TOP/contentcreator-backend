@@ -226,7 +226,7 @@ def generate_similar_text(transcription, openai_api_key):
 
     return [choice.message.content for choice in response.choices]
 
-def generate_avatar(transcription, heygen_key):
+def generate_avatar(transcription, avatar_id, voice_id, heygen_key):
     gen_avatar_url = "https://api.heygen.com/v2/video/generate"
     headers = {"accept": "application/json", "content-type": "application/json", "x-api-key": heygen_key}
     payload = {
@@ -241,7 +241,7 @@ def generate_avatar(transcription, heygen_key):
         {
             "character": {
                 "type": "avatar",
-                "avatar_id": "Gerardo_standing_outdoorsport_side",
+                "avatar_id": avatar_id,
                 "scale": 1,
                 "avatar_style": "normal",
                 "offset": {
@@ -251,7 +251,7 @@ def generate_avatar(transcription, heygen_key):
             },
             "voice": {
                 "type": "text",
-                "voice_id": "1985984feded457b9d013b4f6551ac94",
+                "voice_id": voice_id,
                 "input_text": transcription
             },
             "background": {
@@ -338,8 +338,8 @@ def generate_text(transcription: str):
     return similar_text
 
 @app.get("/generate_video")
-def generate_video(text: str):
-    response = generate_avatar(text, heygen_key)
+def generate_video(text: str, avatar_id: str, voice_id: str):
+    response = generate_avatar(text, avatar_id, voice_id, atheygen_key)
     video_id = response.get("data").get("video_id")
     video_url = check_video_status(heygen_key, video_id)
     return video_url
