@@ -339,7 +339,7 @@ def generate_text(transcription: str):
 
 @app.get("/generate_video")
 def generate_video(text: str, avatar_id: str, voice_id: str):
-    response = generate_avatar(text, avatar_id, voice_id, atheygen_key)
+    response = generate_avatar(text, avatar_id, voice_id, heygen_key)
     video_id = response.get("data").get("video_id")
     video_url = check_video_status(heygen_key, video_id)
     return video_url
