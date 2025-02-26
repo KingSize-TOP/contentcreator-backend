@@ -1,6 +1,8 @@
 from fastapi import FastAPI
-from fastapi.middleware.cors import CORSMiddleware
+from fastapi import BackgroundTasks
 from pydantic import BaseModel
+from uuid import uuid4
+from fastapi.middleware.cors import CORSMiddleware
 from googleapiclient.discovery import build
 import os
 import re
@@ -276,7 +278,8 @@ def generate_avatar(transcription, avatar_id, voice_id, heygen_key):
         "callback_url": "string"
     }
     response = requests.post(gen_avatar_url, json=payload, headers=headers)
-
+    print(transcription)
+    print(response.text)
     return response.json()
 
 def get_avatar_list(heygen_key):
@@ -296,7 +299,6 @@ def check_video_status(heygen_key, video_id):
     headers = {"accept": "application/json", "x-api-key": heygen_key}
     while True:
         response = requests.get(status_url, headers=headers)
-        print(response)
         
         if response.status_code == 200:
             status_info = response.json()
@@ -331,6 +333,25 @@ def download_video(video_url, output_filename):
         raise Exception(f"Failed to download video. Status: {response.status_code}, Response: {response.text}")
 
 
+# A dictionary to track the status of video generation tasks
+tasks = {}
+
+# Background task function to generate the video
+def generate_video_task(task_id: str, text: str, avatar_id: str, voice_id: str):
+    try:
+        # Perform the long-running video generation
+        response = generate_avatar(text, avatar_id, voice_id, heygen_key)
+        print(f"response: {response}")
+        video_id = response.get("data").get("video_id")
+        print(f"Video ID: {video_id}")
+        video_url = check_video_status(heygen_key, video_id)
+
+        # Update the task status and video URL
+        tasks[task_id] = {"status": "completed", "video_url": video_url}
+    except Exception as e:
+        # Handle errors and update the task status
+        tasks[task_id] = {"status": "failed", "error": str(e)}
+
 @app.get("/videos")
 def get_videos(profile_url: str, offset: int, limit: int):
     all_videos = get_sorted_videos(api_key, profile_url)
@@ -352,13 +373,18 @@ def generate_text(transcription: str):
     return similar_text
 
 @app.post("/generate_video")
-def generate_video(request: GenerateVideoRequest):
-    response = generate_avatar(request.text, request.avatar_id, request.voice_id, heygen_key)
-    print(f"Response: {response}")
-    video_id = response.get("data").get("video_id")
-    video_url = check_video_status(heygen_key, video_id)
-    print(f"Video URL: {video_url}")
-    return video_url
+def generate_video(request: GenerateVideoRequest, background_tasks: BackgroundTasks):
+    task_id = str(uuid4())
+    tasks[task_id] = {"status": "processing"}
+    background_tasks.add_task(generate_video_task, task_id, request.text, request.avatar_id, request.voice_id)
+    return {"task_id": task_id}
+
+@app.get("/task_status/{task_id}")
+def get_task_status(task_id: str):
+    task = tasks.get(task_id)
+    if not task:
+        return {"status": "invalid", "error": "Task ID not found"}
+    return task
 
 @app.get("/avatar_list")
 def fetch_avatar_list():
