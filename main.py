@@ -296,6 +296,7 @@ def check_video_status(heygen_key, video_id):
     headers = {"accept": "application/json", "x-api-key": heygen_key}
     while True:
         response = requests.get(status_url, headers=headers)
+        print(response)
         
         if response.status_code == 200:
             status_info = response.json()
