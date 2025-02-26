@@ -28,6 +28,11 @@ api_key = os.getenv('YOUTUBE_API_KEY')
 openai_api_key = os.getenv('OPENAI_API_KEY')
 heygen_key = os.getenv('HEYGEN_API_KEY')
 
+class GenerateVideoRequest(BaseModel):
+    text: str
+    avatar_id: str
+    voice_id: str
+
 if not api_key or not openai_api_key or not heygen_key:
     raise HTTPException(status_code=500, detail="API keys are not configured properly")
 
