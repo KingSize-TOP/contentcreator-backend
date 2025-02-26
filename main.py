@@ -217,17 +217,19 @@ def process_video(video_url):
 
 def generate_similar_text(transcription, openai_api_key):
     openai.api_key = openai_api_key
-
-    response = openai.chat.completions.create(
-        model="gpt-3.5-turbo",  # Use "gpt-3.5-turbo" or another available model
-        messages=[
-            {"role": "system", "content": "I want to generate similar text."},
-            {"role": "user", "content": transcription}
-        ],
-        max_tokens=150,
-        temperature=0.7,
-        n=3
-    )
+    try:
+        response = openai.chat.completions.create(
+            model="gpt-3.5-turbo",  # Use "gpt-3.5-turbo" or another available model
+            messages=[
+                {"role": "system", "content": "I want to generate similar text."},
+                {"role": "user", "content": transcription}
+            ],
+            max_tokens=150,
+            temperature=0.7,
+            n=3
+        )
+    except Exception as e:
+        print(f"Error generating text: {e}")
 
     return [choice.message.content for choice in response.choices]
 
