@@ -278,7 +278,8 @@ def generate_avatar(transcription, avatar_id, voice_id, heygen_key):
         "callback_url": "string"
     }
     response = requests.post(gen_avatar_url, json=payload, headers=headers)
-
+    print(transcription)
+    print(response.text)
     return response.json()
 
 def get_avatar_list(heygen_key):
