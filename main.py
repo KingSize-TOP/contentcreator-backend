@@ -340,7 +340,9 @@ def generate_video_task(task_id: str, text: str, avatar_id: str, voice_id: str):
     try:
         # Perform the long-running video generation
         response = generate_avatar(text, avatar_id, voice_id, heygen_key)
+        print(f"response: {response}")
         video_id = response.get("data").get("video_id")
+        print(f"Video ID: {video_id}")
         video_url = check_video_status(heygen_key, video_id)
 
         # Update the task status and video URL
