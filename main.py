@@ -1,5 +1,6 @@
 from fastapi import FastAPI
 from fastapi import BackgroundTasks
+from pydantic import BaseModel
 from uuid import uuid4
 from fastapi.middleware.cors import CORSMiddleware
 from googleapiclient.discovery import build
@@ -28,6 +29,11 @@ app.add_middleware(
 api_key = os.getenv('YOUTUBE_API_KEY')
 openai_api_key = os.getenv('OPENAI_API_KEY')
 heygen_key = os.getenv('HEYGEN_API_KEY')
+
+class GenerateVideoRequest(BaseModel):
+    text: str
+    avatar_id: str
+    voice_id: str
 
 if not api_key or not openai_api_key or not heygen_key:
     raise HTTPException(status_code=500, detail="API keys are not configured properly")
@@ -364,19 +370,10 @@ def generate_text(transcription: str):
     return similar_text
 
 @app.post("/generate_video")
-def generate_video(
-    text: str, avatar_id: str, voice_id: str, background_tasks: BackgroundTasks
-):
-    # Create a unique ID for this task
+def generate_video(request: GenerateVideoRequest, background_tasks: BackgroundTasks):
     task_id = str(uuid4())
-
-    # Initialize the task status as "processing"
     tasks[task_id] = {"status": "processing"}
-
-    # Add the video generation task to the background
-    background_tasks.add_task(generate_video_task, task_id, text, avatar_id, voice_id)
-
-    # Return the task ID to the frontend
+    background_tasks.add_task(generate_video_task, task_id, request.text, request.avatar_id, request.voice_id)
     return {"task_id": task_id}
 
 @app.get("/task_status/{task_id}")
