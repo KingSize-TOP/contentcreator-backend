@@ -349,6 +349,7 @@ def generate_video(text: str, avatar_id: str, voice_id: str):
     response = generate_avatar(text, avatar_id, voice_id, heygen_key)
     video_id = response.get("data").get("video_id")
     video_url = check_video_status(heygen_key, video_id)
+    print(f"Video URL: {video_url}")
     return video_url
 
 @app.get("/avatar_list")
