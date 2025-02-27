@@ -151,6 +151,12 @@ def get_sorted_videos(api_key, profile_url):
         video['likes'] = stats.get(video_id, {}).get('likes', 0)
         video['duration'] = stats.get(video_id, {}).get('duration', '0:00:00')
 
+    # Filter videos to include only those with a duration less than 2 minutes
+    videos = [
+        video for video in videos 
+        if isodate.parse_duration(video['duration']) < timedelta(minutes=2)
+    ]
+
     # Sort videos based on views and likes (primary = views, secondary = likes)
     videos.sort(key=lambda x: (x['views'], x['likes']), reverse=True)
 
