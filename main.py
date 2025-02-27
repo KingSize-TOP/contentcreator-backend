@@ -39,6 +39,37 @@ class GenerateVideoRequest(BaseModel):
 if not api_key or not openai_api_key or not heygen_key:
     raise HTTPException(status_code=500, detail="API keys are not configured properly")
 
+def convert_to_iso8601(duration_str):
+    """
+    Converts a human-readable duration string (e.g., '0:05:47') to ISO 8601 format (e.g., 'PT5M47S').
+    """
+    try:
+        # Split the duration into hours, minutes, and seconds
+        parts = duration_str.split(':')
+        if len(parts) == 3:
+            hours, minutes, seconds = map(int, parts)
+        elif len(parts) == 2:
+            hours = 0
+            minutes, seconds = map(int, parts)
+        elif len(parts) == 1:
+            hours = 0
+            minutes = 0
+            seconds = int(parts[0])
+        else:
+            raise ValueError(f"Invalid duration format: {duration_str}")
+
+        # Construct the ISO 8601 duration string
+        iso8601_duration = "PT"
+        if hours > 0:
+            iso8601_duration += f"{hours}H"
+        if minutes > 0:
+            iso8601_duration += f"{minutes}M"
+        if seconds > 0:
+            iso8601_duration += f"{seconds}S"
+        return iso8601_duration
+    except Exception as e:
+        raise ValueError(f"Error converting duration to ISO 8601: {duration_str}. Error: {e}")
+
 def get_channel_id_from_username(api_key, username):
     youtube = build('youtube', 'v3', developerKey=api_key)
     request = youtube.search().list(
@@ -158,11 +189,15 @@ def get_sorted_videos(api_key, profile_url):
 
         # Try parsing the duration and filter videos less than 2 minutes
         try:
-            duration_iso = video['duration']
-            duration = isodate.parse_duration(duration_iso)
+            duration_str = video['duration']
+            # Convert non-ISO 8601 durations (e.g., 0:05:47) to ISO 8601 if needed
+            if not duration_str.startswith("P"):
+                duration_str = convert_to_iso8601(duration_str)
+            duration = isodate.parse_duration(duration_str)
+
             if duration < timedelta(minutes=2):
                 filtered_videos.append(video)
-        except (isodate.ISO8601Error, TypeError, ValueError) as e:
+        except (isodate.ISO8601Error, ValueError, TypeError) as e:
             # Log invalid durations and skip the video
             print(f"Skipping video ID {video_id} due to invalid duration: {video['duration']}, Error: {e}")
             continue
