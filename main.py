@@ -475,6 +475,14 @@ def generate_video_task(task_id: str, text: str, avatar_id: str, voice_id: str):
         # Handle errors and update the task status
         tasks[task_id] = {"status": "failed", "error": str(e)}
 
+def format_duration(seconds):
+    """Convert duration in seconds to '0:00:47' format."""
+    hours, remainder = divmod(int(seconds), 3600)
+    minutes, seconds = divmod(remainder, 60)
+    if hours > 0:
+        return f"{hours}:{minutes:02d}:{seconds:02d}"
+    return f"{minutes}:{seconds:02d}"
+
 def get_instagram_videos(username: str, offset: int, limit: int):
     cl = Client(hiker_api_key)
     user = cl.user_by_username_v1(username)
@@ -482,13 +490,17 @@ def get_instagram_videos(username: str, offset: int, limit: int):
     videos = cl.user_medias(user_id, offset, limit)
     result = []
     for item in videos:
-        video_id = item['id']
-        video_title = item['caption']['text']
-        video_thumbnail = item['thumbnail_url']
-        video_url = item['video_url']
-        video_duration = item['video_duration']
-        likes = item['like_count']
-        views = item['play_count']
+        video_id = item.get("id")
+        video_title = item.get("caption", {}).get("text", "")
+        video_thumbnail = item.get("thumbnail_url")
+        video_url = item.get("video_url")
+        video_duration = item.get("video_duration", 0)
+        likes = item.get("like_count", 0)
+        views = item.get("play_count", 0)
+
+        # Format the duration
+        formatted_duration = format_duration(video_duration)
+
         result.append({
             'video_id': video_id,
             'title': video_title,
@@ -498,7 +510,10 @@ def get_instagram_videos(username: str, offset: int, limit: int):
             'likes': likes,
             'views': views
         })
-    return result
+
+    sorted_videos = sorted(result, key=lambda x: (x["likes"], x["views"]), reverse=True)
+
+    return sorted_videos
 
 @app.get("/videos")
 def get_videos(profile_url: str, offset: int, limit: int):
