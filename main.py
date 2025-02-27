@@ -327,27 +327,20 @@ def transcribe_audio_google(audio_file_path, language_code="en-US"):
 
 def process_video(video_url, language_code="en-US"):
     audio_file_path = download_audio(video_url)
-    # audio_chunks = split_audio(audio_file_path)
+    audio_chunks = split_audio(audio_file_path)
 
-    # full_transcription = ''
-    # for chunk in audio_chunks:
-    #     try:
-    #         transcription = transcribe_audio_google(chunk, language_code)
-    #         full_transcription += transcription
-    #     except Exception as e:
-    #         print(f"Error transcribing chunk {chunk}: {e}")
-    #     finally:
-    #         os.remove(chunk)  # Clean up the chunk file
-
-    audio_file = open(audio_file_path, 'rb')
-    transcription = openai.audio.transcriptions.create(
-        model="whisper-1",
-        file=audio_file
-    )
+    full_transcription = ''
+    for chunk in audio_chunks:
+        try:
+            transcription = transcribe_audio_google(chunk, language_code)
+            full_transcription += transcription
+        except Exception as e:
+            print(f"Error transcribing chunk {chunk}: {e}")
+        finally:
+            os.remove(chunk)  # Clean up the chunk file
 
     os.remove(audio_file_path)  # Clean up the original audio file
-    return transcription.text
-    # return full_transcription
+    return full_transcription
 
 def generate_similar_text(transcription, openai_api_key):
     openai.api_key = openai_api_key
