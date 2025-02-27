@@ -301,29 +301,27 @@ def transcribe_audio_google(audio_file_path, language_code="en-US"):
     client = speech.SpeechClient()
 
     # Load audio into memory
-    # with open(audio_file_path, 'rb') as audio_file:
-    #     content = audio_file.read()
+    with open(audio_file_path, 'rb') as audio_file:
+        content = audio_file.read()
 
-    # audio = speech.RecognitionAudio(content=content)
-    # print(f"Language Code: {language_code}")
-    # config = speech.RecognitionConfig(
-    #     encoding=speech.RecognitionConfig.AudioEncoding.LINEAR16,
-    #     sample_rate_hertz=16000,
-    #     language_code=language_code,
-    #     enable_automatic_punctuation=True,
-    # )
-
-    # response = client.recognize(config=config, audio=audio)
-    # print(response)
-
-    # transcription = ''
-    # for result in response.results:
-    #     transcription += result.alternatives[0].transcript + '\n'
-    audio_file = open(audio_file_path, 'rb')
-    transcription = openai.audio.transcriptions.create(
-        model="whisper-1",
-        file=audio_file
+    audio = speech.RecognitionAudio(content=content)
+    config = speech.RecognitionConfig(
+        encoding=speech.RecognitionConfig.AudioEncoding.LINEAR16,
+        sample_rate_hertz=16000,
+        language_code=language_code,
+        enable_automatic_punctuation=True,
     )
+
+    response = client.recognize(config=config, audio=audio)
+
+    transcription = ''
+    for result in response.results:
+        transcription += result.alternatives[0].transcript + '\n'
+    # audio_file = open(audio_file_path, 'rb')
+    # transcription = openai.audio.transcriptions.create(
+    #     model="whisper-1",
+    #     file=audio_file
+    # )
     return transcription.text
 
 def process_video(video_url, language_code="en-US"):
@@ -499,9 +497,12 @@ def get_video_transcript(video_id: str):
     
     # Map ISO 639-1 language codes to Google Speech-to-Text language codes
     google_language_codes = {
-        "en": "en-US",
-        "uk": "uk-UA",
-        "ru": "ru-RU"
+        "en": "en-US",  # English
+        "uk": "uk-UA",  # Ukrainian
+        "ru": "ru-RU",  # Russian
+        "es": "es-ES",  # Spanish
+        "de": "de-DE",  # German
+        "fr": "fr-FR"   # French
     }
     language_code = google_language_codes.get(detected_language, "en-US")
     youtube_url = f"https://www.youtube.com/watch?v={video_id}"
