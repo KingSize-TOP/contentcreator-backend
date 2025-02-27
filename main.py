@@ -301,28 +301,29 @@ def transcribe_audio_google(audio_file_path, language_code="en-US"):
     client = speech.SpeechClient()
 
     # Load audio into memory
-    with open(audio_file_path, 'rb') as audio_file:
-        content = audio_file.read()
+    # with open(audio_file_path, 'rb') as audio_file:
+    #     content = audio_file.read()
 
-    audio = speech.RecognitionAudio(content=content)
-    config = speech.RecognitionConfig(
-        encoding=speech.RecognitionConfig.AudioEncoding.LINEAR16,
-        sample_rate_hertz=16000,
-        language_code=language_code,
-        enable_automatic_punctuation=True,
-    )
-
-    response = client.recognize(config=config, audio=audio)
-
-    transcription = ''
-    for result in response.results:
-        transcription += result.alternatives[0].transcript + '\n'
-    # audio_file = open(audio_file_path, 'rb')
-    # transcription = openai.audio.transcriptions.create(
-    #     model="whisper-1",
-    #     file=audio_file
+    # audio = speech.RecognitionAudio(content=content)
+    # config = speech.RecognitionConfig(
+    #     encoding=speech.RecognitionConfig.AudioEncoding.LINEAR16,
+    #     sample_rate_hertz=16000,
+    #     language_code=language_code,
+    #     enable_automatic_punctuation=True,
     # )
-    return transcription
+
+    # response = client.recognize(config=config, audio=audio)
+    # print(response)
+
+    # transcription = ''
+    # for result in response.results:
+    #     transcription += result.alternatives[0].transcript + '\n'
+    audio_file = open(audio_file_path, 'rb')
+    transcription = openai.audio.transcriptions.create(
+        model="whisper-1",
+        file=audio_file
+    )
+    return transcription.text
 
 def process_video(video_url, language_code="en-US"):
     audio_file_path = download_audio(video_url)
