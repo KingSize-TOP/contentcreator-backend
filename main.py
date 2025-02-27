@@ -124,8 +124,11 @@ def get_video_statistics(api_key, video_ids):
         # Extract views and likes for each video
         for item in response.get('items', []):
             video_id = item['id']
-            duration_iso = item['contentDetails']['duration']
-            duration = isodate.parse_duration(duration_iso)
+            duration_iso = item['contentDetails'].get('duration', None)
+            try:
+                duration = isodate.parse_duration(duration_iso) if duration_iso else timedelta(seconds=0)
+            except ISO8601Error:
+                duration = timedelta(seconds=0)  # Default to 0 seconds if parsing fails
             stats[video_id] = {
                 'views': int(item['statistics'].get('viewCount', 0)),
                 'likes': int(item['statistics'].get('likeCount', 0)),
@@ -151,16 +154,21 @@ def get_sorted_videos(api_key, profile_url):
         video['likes'] = stats.get(video_id, {}).get('likes', 0)
         video['duration'] = stats.get(video_id, {}).get('duration', '0:00:00')
 
-    # Filter videos to include only those with a duration less than 2 minutes
-    videos = [
-        video for video in videos 
-        if isodate.parse_duration(video['duration']) < timedelta(minutes=2)
-    ]
+    # Filter videos to include only those with a valid duration less than 2 minutes
+    filtered_videos = []
+    for video in videos:
+        try:
+            duration = isodate.parse_duration(video['duration'])
+            if duration < timedelta(minutes=2):
+                filtered_videos.append(video)
+        except ISO8601Error:
+            # Skip videos with invalid durations
+            continue
 
     # Sort videos based on views and likes (primary = views, secondary = likes)
-    videos.sort(key=lambda x: (x['views'], x['likes']), reverse=True)
+    filtered_videos.sort(key=lambda x: (x['views'], x['likes']), reverse=True)
 
-    return videos;
+    return filtered_videos
 
 def download_audio(video_url, output_format='wav'):
     ydl_opts = {
