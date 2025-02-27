@@ -506,7 +506,7 @@ def get_instagram_videos(username: str, offset: int, limit: int):
             'title': video_title,
             'thumbnail': video_thumbnail,
             'url': video_url,
-            'duration': video_duration,
+            'duration': formatted_duration,
             'likes': likes,
             'views': views
         })
