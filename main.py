@@ -305,6 +305,7 @@ def transcribe_audio_google(audio_file_path, language_code="en-US"):
         content = audio_file.read()
 
     audio = speech.RecognitionAudio(content=content)
+    print(f"Language Code: {language_code}")
     config = speech.RecognitionConfig(
         encoding=speech.RecognitionConfig.AudioEncoding.LINEAR16,
         sample_rate_hertz=16000,
