@@ -207,6 +207,47 @@ def get_sorted_videos(api_key, profile_url):
 
     return filtered_videos
 
+def get_short_videos(api_key, profile_url):
+    """
+    Fetches only short videos (less than 60 seconds in duration) from a YouTube channel.
+    """
+    # Fetch videos and subscription count
+    channel_data = get_videos_from_youtube_channel(api_key, profile_url)
+    videos = channel_data['videos']
+
+    # Get video statistics (views, likes, duration)
+    video_ids = [video['video_id'] for video in videos]
+    stats = get_video_statistics(api_key, video_ids)
+
+    # Add views, likes, and duration to each video, and filter for short videos
+    short_videos = []
+    for video in videos:
+        video_id = video['video_id']
+        video['views'] = stats.get(video_id, {}).get('views', 0)
+        video['likes'] = stats.get(video_id, {}).get('likes', 0)
+        video['duration'] = stats.get(video_id, {}).get('duration', '0:00:00')  # Default to 0:00:00 if duration is missing
+
+        # Try parsing the duration and filter for videos less than 60 seconds
+        try:
+            duration_str = video['duration']
+            # Convert non-ISO 8601 durations (e.g., 0:05:47) to ISO 8601 if needed
+            if not duration_str.startswith("P"):
+                duration_str = convert_to_iso8601(duration_str)
+            duration = isodate.parse_duration(duration_str)
+
+            # Check if the duration is less than 60 seconds
+            if duration < timedelta(seconds=60):
+                short_videos.append(video)
+        except (isodate.ISO8601Error, ValueError, TypeError) as e:
+            # Log invalid durations and skip the video
+            print(f"Skipping video ID {video_id} due to invalid duration: {video['duration']}, Error: {e}")
+            continue
+
+    # Sort short videos based on views and likes (primary = views, secondary = likes)
+    short_videos.sort(key=lambda x: (x['views'], x['likes']), reverse=True)
+
+    return short_videos
+
 def download_audio(video_url, output_format='wav'):
     ydl_opts = {
         'format': 'bestaudio/best',
@@ -410,6 +451,15 @@ def get_videos(profile_url: str, offset: int, limit: int):
     return {
         "videos": paginated_videos,
         "next_offset": offset + limit if offset + limit < len(all_videos) else None,
+    }
+
+@app.get("/short_videos")
+def get_short_videos_endpoint(profile_url: str, offset: int = 0, limit: int = 10):
+    all_short_videos = get_short_videos(api_key, profile_url)
+    paginated_videos = all_short_videos[offset : offset + limit]
+    return {
+        "videos": paginated_videos,
+        "next_offset": offset + limit if offset + limit < len(all_short_videos) else None,
     }
 
 @app.get("/transcript_video")
