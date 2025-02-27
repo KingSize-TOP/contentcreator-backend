@@ -301,8 +301,8 @@ def transcribe_audio_google(audio_file_path, language_code="en-US"):
     client = speech.SpeechClient()
 
     # Load audio into memory
-    with open(audio_file_path, 'rb') as audio_file:
-        content = audio_file.read()
+    # with open(audio_file_path, 'rb') as audio_file:
+    #     content = audio_file.read()
 
     # audio = speech.RecognitionAudio(content=content)
     # print(f"Language Code: {language_code}")
@@ -319,6 +319,7 @@ def transcribe_audio_google(audio_file_path, language_code="en-US"):
     # transcription = ''
     # for result in response.results:
     #     transcription += result.alternatives[0].transcript + '\n'
+    audio_file = open(audio_file_path, 'rb')
     transcription = openai.audio.transcriptions.create(
         model="whisper-1",
         file=audio_file
