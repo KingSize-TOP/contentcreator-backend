@@ -15,6 +15,7 @@ import requests
 import openai
 from datetime import timedelta
 import isodate
+from isodate import ISO8601Error
 
 app = FastAPI()
 # Add CORS middleware
