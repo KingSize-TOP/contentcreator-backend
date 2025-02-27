@@ -148,23 +148,23 @@ def get_sorted_videos(api_key, profile_url):
     video_ids = [video['video_id'] for video in videos]
     stats = get_video_statistics(api_key, video_ids)
 
-    # Add views and likes to each video
+    # Add views, likes, and duration to each video
+    filtered_videos = []
     for video in videos:
         video_id = video['video_id']
         video['views'] = stats.get(video_id, {}).get('views', 0)
         video['likes'] = stats.get(video_id, {}).get('likes', 0)
         video['duration'] = stats.get(video_id, {}).get('duration', '0:00:00')
 
-    # Filter videos to include only those with a valid duration less than 2 minutes
-    filtered_videos = []
-    for video in videos:
+        # Try parsing the duration and filter videos less than 2 minutes
         try:
-            duration = isodate.parse_duration(video['duration'])
-            print(duration)
+            duration_iso = video['duration']
+            duration = isodate.parse_duration(duration_iso)
             if duration < timedelta(minutes=2):
                 filtered_videos.append(video)
-        except ISO8601Error:
-            # Skip videos with invalid durations
+        except (isodate.ISO8601Error, TypeError, ValueError) as e:
+            # Log invalid durations and skip the video
+            print(f"Skipping video ID {video_id} due to invalid duration: {video['duration']}, Error: {e}")
             continue
 
     # Sort videos based on views and likes (primary = views, secondary = likes)
