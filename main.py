@@ -1,5 +1,7 @@
-from fastapi import FastAPI
+from fastapi import FastAPI, HTTPException, Query
 from fastapi import BackgroundTasks
+from fastapi.responses import StreamingResponse
+import httpx
 from pydantic import BaseModel
 from uuid import uuid4
 from fastapi.middleware.cors import CORSMiddleware
@@ -570,3 +572,26 @@ def fetch_voice_list():
 def fetch_insta_videos(username: str, offset: int, limit: int):
     response = get_instagram_videos(username, offset, limit)
     return response
+
+@app.get("/proxy-image")
+async def proxy_image(url: str = Query(...)):
+    """
+    Proxy endpoint to fetch an image from a given URL and serve it to the frontend.
+    """
+    try:
+        # Fetch the image from the provided URL
+        async with httpx.AsyncClient() as client:
+            response = await client.get(url)
+
+        # Check if the request was successful
+        if response.status_code == 200:
+            # Return the image as a streaming response
+            return StreamingResponse(
+                response.iter_bytes(),  # Stream the image bytes
+                media_type=response.headers['Content-Type']  # Ensure the correct content type
+            )
+        else:
+            raise HTTPException(status_code=response.status_code, detail="Failed to fetch image")
+
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=f"Error fetching image: {str(e)}")
