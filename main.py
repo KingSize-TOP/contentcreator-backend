@@ -304,22 +304,26 @@ def transcribe_audio_google(audio_file_path, language_code="en-US"):
     with open(audio_file_path, 'rb') as audio_file:
         content = audio_file.read()
 
-    audio = speech.RecognitionAudio(content=content)
-    print(f"Language Code: {language_code}")
-    config = speech.RecognitionConfig(
-        encoding=speech.RecognitionConfig.AudioEncoding.LINEAR16,
-        sample_rate_hertz=16000,
-        language_code=language_code,
-        enable_automatic_punctuation=True,
+    # audio = speech.RecognitionAudio(content=content)
+    # print(f"Language Code: {language_code}")
+    # config = speech.RecognitionConfig(
+    #     encoding=speech.RecognitionConfig.AudioEncoding.LINEAR16,
+    #     sample_rate_hertz=16000,
+    #     language_code=language_code,
+    #     enable_automatic_punctuation=True,
+    # )
+
+    # response = client.recognize(config=config, audio=audio)
+    # print(response)
+
+    # transcription = ''
+    # for result in response.results:
+    #     transcription += result.alternatives[0].transcript + '\n'
+    transcription = openai.audio.transcriptions.create(
+        model="whisper-1",
+        file=audio_file
     )
-
-    response = client.recognize(config=config, audio=audio)
-    print(response)
-
-    transcription = ''
-    for result in response.results:
-        transcription += result.alternatives[0].transcript + '\n'
-    return transcription
+    return transcription.text
 
 def process_video(video_url, language_code="en-US"):
     audio_file_path = download_audio(video_url)
