@@ -84,6 +84,27 @@ def get_channel_id_from_username(api_key, username):
     else:
         raise ValueError("Channel not found for the given username.")
 
+def get_video_language(api_key, video_id):
+    """
+    Fetches the default audio language of a YouTube video using the YouTube Data API.
+    """
+    youtube = build('youtube', 'v3', developerKey=api_key)
+
+    # Fetch video details
+    request = youtube.videos().list(
+        part="snippet",
+        id=video_id
+    )
+    response = request.execute()
+
+    # Extract the default audio language from the video metadata
+    if "items" in response and len(response["items"]) > 0:
+        video = response["items"][0]
+        default_language = video["snippet"].get("defaultAudioLanguage")  # Example: "en", "uk", "ru"
+        return default_language
+    else:
+        return None        
+
 def get_videos_from_youtube_channel(api_key, profile_url):
     # Extract username from profile URL
     match = re.match(r'https://www\.youtube\.com/@([^/]+)', profile_url)
@@ -276,7 +297,7 @@ def split_audio(audio_file_path, chunk_length_ms=30000):
         chunks.append(chunk_file)
     return chunks
 
-def transcribe_audio_google(audio_file_path):
+def transcribe_audio_google(audio_file_path, language_code="en-US"):
     client = speech.SpeechClient()
 
     # Load audio into memory
@@ -287,7 +308,7 @@ def transcribe_audio_google(audio_file_path):
     config = speech.RecognitionConfig(
         encoding=speech.RecognitionConfig.AudioEncoding.LINEAR16,
         sample_rate_hertz=16000,
-        language_code="en-US",
+        language_code=language_code,
         enable_automatic_punctuation=True,
     )
 
@@ -298,14 +319,14 @@ def transcribe_audio_google(audio_file_path):
         transcription += result.alternatives[0].transcript + '\n'
     return transcription
 
-def process_video(video_url):
+def process_video(video_url, language_code="en-US"):
     audio_file_path = download_audio(video_url)
     audio_chunks = split_audio(audio_file_path)
 
     full_transcription = ''
     for chunk in audio_chunks:
         try:
-            transcription = transcribe_audio_google(chunk)
+            transcription = transcribe_audio_google(chunk, language_code)
             full_transcription += transcription
         except Exception as e:
             print(f"Error transcribing chunk {chunk}: {e}")
@@ -463,9 +484,19 @@ def get_short_videos_endpoint(profile_url: str, offset: int = 0, limit: int = 10
     }
 
 @app.get("/transcript_video")
-def get_videos(video_id: str):
+def get_video_transcript(video_id: str):
+    # Detect the video's language using the YouTube Data API
+    detected_language = get_video_language(api_key, video_id)
+    
+    # Map ISO 639-1 language codes to Google Speech-to-Text language codes
+    google_language_codes = {
+        "en": "en-US",
+        "uk": "uk-UA",
+        "ru": "ru-RU"
+    }
+    language_code = google_language_codes.get(detected_language, "en-US")
     youtube_url = f"https://www.youtube.com/watch?v={video_id}"
-    transcription = process_video(youtube_url)
+    transcription = process_video(youtube_url, language_code)
     return transcription
 
 @app.get("/generate_text")
