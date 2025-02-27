@@ -16,6 +16,7 @@ import openai
 from datetime import timedelta
 import isodate
 from isodate import ISO8601Error
+from hikerapi import Client
 
 app = FastAPI()
 # Add CORS middleware
@@ -30,6 +31,7 @@ app.add_middleware(
 api_key = os.getenv('YOUTUBE_API_KEY')
 openai_api_key = os.getenv('OPENAI_API_KEY')
 heygen_key = os.getenv('HEYGEN_API_KEY')
+hiker_api_key = os.getenv('HIKER_API_KEY')
 
 class GenerateVideoRequest(BaseModel):
     text: str
@@ -471,6 +473,31 @@ def generate_video_task(task_id: str, text: str, avatar_id: str, voice_id: str):
         # Handle errors and update the task status
         tasks[task_id] = {"status": "failed", "error": str(e)}
 
+def get_instagram_videos(username: str, offset: int, limit: int):
+    cl = Client(hiker_api_key)
+    user = cl.user_by_username_v1(username)
+    user_id = user.get("pk")
+    videos = cl.user_medias(user_id, offset, limit)
+    result = []
+    for item in videos:
+        video_id = item['id']
+        video_title = item['caption']['text']
+        video_thumbnail = item['thumbnail_url']
+        video_url = item['video_url']
+        video_duration = item['video_duration']
+        likes = item['like_count']
+        views = item['play_count']
+        result.append({
+            'video_id': video_id,
+            'title': video_title,
+            'thumbnail': video_thumbnail,
+            'url': video_url,
+            'duration': video_duration,
+            'likes': likes,
+            'views': views
+        })
+    return result
+
 @app.get("/videos")
 def get_videos(profile_url: str, offset: int, limit: int):
     all_videos = get_sorted_videos(api_key, profile_url)
@@ -538,3 +565,8 @@ def fetch_avatar_list():
 def fetch_voice_list():
     response = get_voice_list(heygen_key)
     return response.get("data").get("voices")
+
+@app.get("/insta_videos")
+def fetch_insta_videos(username: str, offset: int, limit: int):
+    response = get_instagram_videos(username, offset, limit)
+    return response
