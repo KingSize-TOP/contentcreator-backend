@@ -487,6 +487,8 @@ def get_short_videos_endpoint(profile_url: str, offset: int = 0, limit: int = 10
 def get_video_transcript(video_id: str):
     # Detect the video's language using the YouTube Data API
     detected_language = get_video_language(api_key, video_id)
+
+    print(f"Language: {detected_language}")
     
     # Map ISO 639-1 language codes to Google Speech-to-Text language codes
     google_language_codes = {
