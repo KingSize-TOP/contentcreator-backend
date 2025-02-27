@@ -155,12 +155,12 @@ def get_sorted_videos(api_key, profile_url):
         video['likes'] = stats.get(video_id, {}).get('likes', 0)
         video['duration'] = stats.get(video_id, {}).get('duration', '0:00:00')
 
-    print(videos)
     # Filter videos to include only those with a valid duration less than 2 minutes
     filtered_videos = []
     for video in videos:
         try:
             duration = isodate.parse_duration(video['duration'])
+            print(duration)
             if duration < timedelta(minutes=2):
                 filtered_videos.append(video)
         except ISO8601Error:
