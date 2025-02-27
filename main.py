@@ -323,7 +323,7 @@ def transcribe_audio_google(audio_file_path, language_code="en-US"):
     #     model="whisper-1",
     #     file=audio_file
     # )
-    return transcription.text
+    return transcription
 
 def process_video(video_url, language_code="en-US"):
     audio_file_path = download_audio(video_url)
