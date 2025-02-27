@@ -314,6 +314,7 @@ def transcribe_audio_google(audio_file_path, language_code="en-US"):
     )
 
     response = client.recognize(config=config, audio=audio)
+    print(response)
 
     transcription = ''
     for result in response.results:
