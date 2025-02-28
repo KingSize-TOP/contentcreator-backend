@@ -647,11 +647,21 @@ async def proxy_image(url: str = Query(...)):
 
 @app.get("/insta_transcript")
 async def insta_transcript(url: str):
-    video_path = "video.mp4"
-    audio_path = "audio.mp3"
-    download_video(url, video_path)
-    extract_audio(video_path, audio_path)
-    transcript = transcribe_audio(audio_path)
-    return transcript
+    audio_file_path = download_audio(url)
+    audio_chunks = split_audio(audio_file_path)
+
+    full_transcription = ''
+    for chunk in audio_chunks:
+        try:
+            transcription = transcribe_audio(audio_path)
+            full_transcription += transcription
+        except Exception as e:
+            print(f"Error transcribing chunk {chunk}: {e}")
+        finally:
+            os.remove(chunk)  # Clean up the chunk file
+
+    os.remove(audio_file_path)  # Clean up the original audio file
+    
+    return full_transcription
 
 
