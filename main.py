@@ -485,7 +485,7 @@ def get_instagram_videos(username: str):
     cl = Client(hiker_api_key)
     user = cl.user_by_username_v1(username)
     user_id = user.get("pk")
-    videos = cl.user_clips_v1(user_id, 50)
+    videos = cl.user_clips_v1(user_id, 25)
     result = []
     for item in videos:
         video_id = item.get("id")
