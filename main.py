@@ -446,6 +446,7 @@ def check_video_status(heygen_key, video_id):
             raise Exception(f"Failed to check video status. Status: {response.status_code}, Response: {response.text}")
 
 def download_video(video_url, output_filename):
+    print(video_url)
     response = requests.get(video_url)
     
     if response.status_code == 200:
