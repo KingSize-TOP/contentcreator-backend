@@ -489,7 +489,7 @@ def get_instagram_videos(username: str):
     result = []
     for item in videos:
         video_id = item.get("id")
-        video_title = item.get("caption", {}).get("text", "")
+        video_title = item.get("caption_text", "")
         video_thumbnail = item.get("thumbnail_url")
         video_url = item.get("video_url")
         video_duration = item.get("video_duration", 0)
