@@ -455,6 +455,21 @@ def download_video(video_url, output_filename):
     else:
         raise Exception(f"Failed to download video. Status: {response.status_code}, Response: {response.text}")
 
+def extract_audio(video_path, audio_output_path="audio.mp3"):
+    command = [
+        "ffmpeg",
+        "-i", video_path,
+        "-q:a", "0",
+        "-map", "a",
+        audio_output_path
+    ]
+    subprocess.run(command)
+    print(f"Audio extracted successfully: {audio_output_path}")
+
+def transcribe_audio(audio_path):
+    model = whisper.load_model("base")  # You can use "small", "medium", or "large" models for better accuracy
+    result = model.transcribe(audio_path)
+    return result["text"]
 
 # A dictionary to track the status of video generation tasks
 tasks = {}
@@ -612,3 +627,14 @@ async def proxy_image(url: str = Query(...)):
 
     except Exception as e:
         raise HTTPException(status_code=500, detail=f"Error fetching image: {str(e)}")
+
+@app.get("/insta_transcript")
+async def insta_transcript(url: str):
+    video_path = "video.mp4"
+    audio_path = "audio.mp3"
+    download_video(video_url, video_path)
+    extract_audio(video_path, audio_path)
+    transcript = transcribe_audio(audio_path)
+    return transcript
+
+
