@@ -479,9 +479,7 @@ def format_duration(seconds):
     """Convert duration in seconds to '0:00:47' format."""
     hours, remainder = divmod(int(seconds), 3600)
     minutes, seconds = divmod(remainder, 60)
-    if hours > 0:
-        return f"{hours}:{minutes:02d}:{seconds:02d}"
-    return f"{minutes}:{seconds:02d}"
+    return f"{hours}:{minutes:02d}:{seconds:02d}"
 
 def get_instagram_videos(username: str):
     cl = Client(hiker_api_key)
