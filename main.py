@@ -483,11 +483,11 @@ def format_duration(seconds):
         return f"{hours}:{minutes:02d}:{seconds:02d}"
     return f"{minutes}:{seconds:02d}"
 
-def get_instagram_videos(username: str, offset: int, limit: int):
+def get_instagram_videos(username: str):
     cl = Client(hiker_api_key)
     user = cl.user_by_username_v1(username)
     user_id = user.get("pk")
-    videos = cl.user_medias(user_id, offset, limit)
+    videos = cl.user_clips_v1(user_id, 50)
     result = []
     for item in videos:
         video_id = item.get("id")
@@ -585,8 +585,12 @@ def fetch_voice_list():
 
 @app.get("/insta_videos")
 def fetch_insta_videos(username: str, offset: int, limit: int):
-    response = get_instagram_videos(username, offset, limit)
-    return response
+    all_videos = get_instagram_videos(username)
+    paginated_videos = all_videos[offset : offset + limit]
+    return {
+        "videos": paginated_videos,
+        "next_offset": offset + limit if offset + limit < len(all_videos) else None,
+    }
 
 @app.get("/proxy-image")
 async def proxy_image(url: str = Query(...)):
