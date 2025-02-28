@@ -632,7 +632,7 @@ async def proxy_image(url: str = Query(...)):
 async def insta_transcript(url: str):
     video_path = "video.mp4"
     audio_path = "audio.mp3"
-    download_video(video_url, video_path)
+    download_video(url, video_path)
     extract_audio(video_path, audio_path)
     transcript = transcribe_audio(audio_path)
     return transcript
