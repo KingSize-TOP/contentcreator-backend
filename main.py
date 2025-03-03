@@ -645,45 +645,45 @@ async def proxy_image(url: str = Query(...)):
     except Exception as e:
         raise HTTPException(status_code=500, detail=f"Error fetching image: {str(e)}")
 
-def download_instagram_video(cdn_url, save_path):
+def download_instagram_video(url, output_path="video.mp4", extract_audio=False, audio_format="mp3"):
     """
-    Downloads a video from Instagram CDN link.
+    Downloads an Instagram video using yt-dlp and optionally extracts audio.
+    
+    Args:
+        url (str): The URL of the Instagram video.
+        output_path (str): The path where the video or audio will be saved.
+        extract_audio (bool): If True, extracts audio from the video.
+        audio_format (str): The format of the extracted audio (e.g., "mp3", "wav").
     """
-    try:
-        # Send a GET request to the CDN URL
-        response = requests.get(cdn_url, stream=True)
-        
-        # Check if the request was successful
-        if response.status_code == 200:
-            # Save the video locally
-            with open(save_path, 'wb') as video_file:
-                for chunk in response.iter_content(chunk_size=1024):
-                    if chunk:
-                        video_file.write(chunk)
-            print(f"Video successfully downloaded: {save_path}")
-        else:
-            print(f"Failed to download video. Status code: {response.status_code}")
-    except Exception as e:
-        print(f"An error occurred during download: {e}")
+    # Options for yt-dlp
+    ydl_opts = {
+        'outtmpl': output_path,  # Output file template
+        'format': 'bestvideo+bestaudio/best',  # Download the best available quality
+    }
 
-def extract_audio_with_pydub(video_path, audio_path):
-    """
-    Extracts audio from a video file using pydub and saves it as an audio file.
-    """
+    if extract_audio:
+        # Add audio extraction options
+        ydl_opts.update({
+            'format': 'bestaudio/best',  # Download the best audio only
+            'postprocessors': [{
+                'key': 'FFmpegExtractAudio',  # Use FFmpeg to extract audio
+                'preferredcodec': audio_format,  # Set the desired audio format
+                'preferredquality': '192',  # Set the audio quality (in kbps)
+            }],
+            'outtmpl': output_path.replace('.mp4', f'.{audio_format}'),  # Save as audio file
+        })
+
     try:
-        # Convert the video to audio
-        audio = AudioSegment.from_file(video_path)
-        
-        # Export the audio to a file
-        audio.export(audio_path, format="wav")
-        print(f"Audio successfully extracted and saved to: {audio_path}")
+        # Use yt-dlp to download the video or audio
+        with youtube_dl.YoutubeDL(ydl_opts) as ydl:
+            ydl.download([url])
+        print(f"Download successful! Saved to: {output_path}")
     except Exception as e:
-        print(f"An error occurred during audio extraction: {e}")
+        print(f"An error occurred: {e}")
 
 @app.get("/insta_transcript")
 async def insta_transcript(url: str):
-    download_instagram_video(url, "video.mp4")
-    extract_audio_with_pydub("video.mp4", "audio.wav")
+    download_instagram_video(url, output_path="video.mp4", extract_audio=True, audio_format"mp3")
     # audio_chunks = split_audio("audio.wav")
 
     # full_transcription = ''
