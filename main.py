@@ -698,6 +698,6 @@ async def insta_transcript(url: str):
 
     # os.remove(audio_file_path)  # Clean up the original audio file
     
-    return full_transcription
+    return ""
 
 
