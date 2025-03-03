@@ -675,7 +675,7 @@ def extract_audio_with_pydub(video_path, audio_path):
         audio = AudioSegment.from_file(video_path)
         
         # Export the audio to a file
-        audio.export(audio_path, format="mp3")
+        audio.export(audio_path, format="wav")
         print(f"Audio successfully extracted and saved to: {audio_path}")
     except Exception as e:
         print(f"An error occurred during audio extraction: {e}")
@@ -683,8 +683,8 @@ def extract_audio_with_pydub(video_path, audio_path):
 @app.get("/insta_transcript")
 async def insta_transcript(url: str):
     download_instagram_video(url, "video.mp4")
-    extract_audio_with_pydub("video.mp4", "audio.mp3")
-    audio_chunks = split_audio("audio.mp3")
+    extract_audio_with_pydub("video.mp4", "audio.wav")
+    audio_chunks = split_audio("audio.wav")
 
     full_transcription = ''
     for chunk in audio_chunks:
