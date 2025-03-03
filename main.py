@@ -645,10 +645,46 @@ async def proxy_image(url: str = Query(...)):
     except Exception as e:
         raise HTTPException(status_code=500, detail=f"Error fetching image: {str(e)}")
 
+def download_instagram_video(cdn_url, save_path):
+    """
+    Downloads a video from Instagram CDN link.
+    """
+    try:
+        # Send a GET request to the CDN URL
+        response = requests.get(cdn_url, stream=True)
+        
+        # Check if the request was successful
+        if response.status_code == 200:
+            # Save the video locally
+            with open(save_path, 'wb') as video_file:
+                for chunk in response.iter_content(chunk_size=1024):
+                    if chunk:
+                        video_file.write(chunk)
+            print(f"Video successfully downloaded: {save_path}")
+        else:
+            print(f"Failed to download video. Status code: {response.status_code}")
+    except Exception as e:
+        print(f"An error occurred during download: {e}")
+
+def extract_audio_with_pydub(video_path, audio_path):
+    """
+    Extracts audio from a video file using pydub and saves it as an audio file.
+    """
+    try:
+        # Convert the video to audio
+        audio = AudioSegment.from_file(video_path)
+        
+        # Export the audio to a file
+        audio.export(audio_path, format="mp3")
+        print(f"Audio successfully extracted and saved to: {audio_path}")
+    except Exception as e:
+        print(f"An error occurred during audio extraction: {e}")
+
 @app.get("/insta_transcript")
 async def insta_transcript(url: str):
-    audio_file_path = download_audio(url)
-    audio_chunks = split_audio(audio_file_path)
+    download_instagram_video(url, "video.mp4")
+    extract_audio_with_pydub("video.mp4", "audio.mp3")
+    audio_chunks = split_audio("audio.mp3")
 
     full_transcription = ''
     for chunk in audio_chunks:
