@@ -683,7 +683,7 @@ def download_instagram_video(url, output_path="video.mp4", extract_audio=False, 
 
 @app.get("/insta_transcript")
 async def insta_transcript(url: str):
-    download_instagram_video(url, output_path="video.mp4", extract_audio=True, audio_format"mp3")
+    download_instagram_video(url, output_path="video.mp4", extract_audio=True, audio_format="mp3")
     # audio_chunks = split_audio("audio.wav")
 
     # full_transcription = ''
