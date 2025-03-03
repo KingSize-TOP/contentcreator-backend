@@ -659,6 +659,7 @@ def download_instagram_video(url, output_path="video.mp4", extract_audio=False, 
     ydl_opts = {
         'outtmpl': output_path,  # Output file template
         'format': 'bestvideo+bestaudio/best',  # Download the best available quality
+        'verbose': True,
     }
 
     if extract_audio:
