@@ -572,18 +572,18 @@ def get_instagram_short_videos(username: str):
         likes = item.get("like_count", 0)
         views = item.get("play_count", 0)
         if video_duration < 60:
-        # Format the duration
-        formatted_duration = format_duration(video_duration)
+            # Format the duration
+            formatted_duration = format_duration(video_duration)
 
-        result.append({
-            'video_id': video_id,
-            'title': video_title,
-            'thumbnail': video_thumbnail,
-            'url': video_url,
-            'duration': formatted_duration,
-            'likes': likes,
-            'views': views
-        })
+            result.append({
+                'video_id': video_id,
+                'title': video_title,
+                'thumbnail': video_thumbnail,
+                'url': video_url,
+                'duration': formatted_duration,
+                'likes': likes,
+                'views': views
+            })
 
     sorted_videos = sorted(result, key=lambda x: (x["likes"], x["views"]), reverse=True)
 
