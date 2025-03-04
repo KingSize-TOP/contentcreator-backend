@@ -667,7 +667,7 @@ def download_instagram_video(url, output_format="wav"):
         'outtmpl': 'audio.%(ext)s',
     }
     with youtube_dl.YoutubeDL(ydl_opts) as ydl:
-        ydl.download([video_url])
+        ydl.download([url])
     return f"audio.{output_format}"
 
 @app.get("/insta_transcript")
