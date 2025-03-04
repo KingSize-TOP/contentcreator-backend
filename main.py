@@ -556,6 +556,39 @@ def get_instagram_videos(username: str):
 
     return sorted_videos
 
+
+def get_instagram_short_videos(username: str):
+    cl = Client(hiker_api_key)
+    user = cl.user_by_username_v1(username)
+    user_id = user.get("pk")
+    videos = cl.user_clips_v1(user_id, 25)
+    result = []
+    for item in videos:
+        video_id = item.get("id")
+        video_title = item.get("caption_text", "")
+        video_thumbnail = item.get("thumbnail_url")
+        video_url = item.get("video_url")
+        video_duration = item.get("video_duration", 0)
+        likes = item.get("like_count", 0)
+        views = item.get("play_count", 0)
+        if video_duration < 60:
+        # Format the duration
+        formatted_duration = format_duration(video_duration)
+
+        result.append({
+            'video_id': video_id,
+            'title': video_title,
+            'thumbnail': video_thumbnail,
+            'url': video_url,
+            'duration': formatted_duration,
+            'likes': likes,
+            'views': views
+        })
+
+    sorted_videos = sorted(result, key=lambda x: (x["likes"], x["views"]), reverse=True)
+
+    return sorted_videos
+
 @app.get("/videos")
 def get_videos(profile_url: str, offset: int, limit: int):
     all_videos = get_sorted_videos(api_key, profile_url)
@@ -627,6 +660,15 @@ def fetch_voice_list():
 @app.get("/insta_videos")
 def fetch_insta_videos(username: str, offset: int, limit: int):
     all_videos = get_instagram_videos(username)
+    paginated_videos = all_videos[offset : offset + limit]
+    return {
+        "videos": paginated_videos,
+        "next_offset": offset + limit if offset + limit < len(all_videos) else None,
+    }
+
+@app.get("/insta_short_videos")
+def fetch_insta_short_videos(username: str, offset: int, limit: int):
+    all_videos = get_instagram_short_videos(username)
     paginated_videos = all_videos[offset : offset + limit]
     return {
         "videos": paginated_videos,
