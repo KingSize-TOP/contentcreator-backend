@@ -329,6 +329,17 @@ def transcribe_audio_google(audio_file_path, language_code="en-US"):
     # )
     return transcription
 
+def transcribe_audio_whisper(audio_file_path, openai_api_key):
+    transcription = ''
+    audio_file = open(audio_file_path, 'rb')
+    openai.api_key = openai_api_key
+    transcription = openai.audio.transcriptions.create(
+        model="whisper-1",
+        file=audio_file
+    )
+    audio_file.close()
+    return transcription.text
+
 def process_video(video_url, language_code="en-US"):
     audio_file_path = download_audio(video_url)
     audio_chunks = split_audio(audio_file_path)
@@ -645,60 +656,38 @@ async def proxy_image(url: str = Query(...)):
     except Exception as e:
         raise HTTPException(status_code=500, detail=f"Error fetching image: {str(e)}")
 
-def download_instagram_video(url, output_path="video.mp4", extract_audio=False, audio_format="mp3"):
-    """
-    Downloads an Instagram video using yt-dlp and optionally extracts audio.
-    
-    Args:
-        url (str): The URL of the Instagram video.
-        output_path (str): The path where the video or audio will be saved.
-        extract_audio (bool): If True, extracts audio from the video.
-        audio_format (str): The format of the extracted audio (e.g., "mp3", "wav").
-    """
-    # Options for yt-dlp
+def download_instagram_video(url, output_format="wav"):
     ydl_opts = {
-        'outtmpl': output_path,  # Output file template
-        'format': 'bestvideo+bestaudio/best',  # Download the best available quality
-        'verbose': True,
+        'format': 'bestaudio/best',
+        'postprocessors': [{
+            'key': 'FFmpegExtractAudio',
+            'preferredcodec': output_format,
+            'preferredquality': '192'
+        }],
+        'outtmpl': 'audio.%(ext)s',
     }
-
-    if extract_audio:
-        # Add audio extraction options
-        ydl_opts.update({
-            'format': 'bestaudio/best',  # Download the best audio only
-            'postprocessors': [{
-                'key': 'FFmpegExtractAudio',  # Use FFmpeg to extract audio
-                'preferredcodec': audio_format,  # Set the desired audio format
-                'preferredquality': '192',  # Set the audio quality (in kbps)
-            }],
-            'outtmpl': output_path.replace('.mp4', f'.{audio_format}'),  # Save as audio file
-        })
-
-    try:
-        # Use yt-dlp to download the video or audio
-        with youtube_dl.YoutubeDL(ydl_opts) as ydl:
-            ydl.download([url])
-        print(f"Download successful! Saved to: {output_path}")
-    except Exception as e:
-        print(f"An error occurred: {e}")
+    with youtube_dl.YoutubeDL(ydl_opts) as ydl:
+        ydl.download([video_url])
+    return f"audio.{output_format}"
 
 @app.get("/insta_transcript")
 async def insta_transcript(url: str):
-    download_instagram_video(url, output_path="video.mp4", extract_audio=True, audio_format="mp3")
-    # audio_chunks = split_audio("audio.wav")
+    audio_file_path = download_instagram_video(url, output_format="wav")
+    audio_chunks = split_audio(audio_file_path)
 
-    # full_transcription = ''
-    # for chunk in audio_chunks:
-    #     try:
-    #         transcription = transcribe_audio(audio_path)
-    #         full_transcription += transcription
-    #     except Exception as e:
-    #         print(f"Error transcribing chunk {chunk}: {e}")
-    #     finally:
-    #         os.remove(chunk)  # Clean up the chunk file
-
-    # os.remove(audio_file_path)  # Clean up the original audio file
+    full_transcription = ''
+    for chunk in audio_chunks:
+        try:
+            transcription = transcribe_audio_whisper(chunk, openai_api_key)
+            print(transcription)
+            full_transcription += transcription
+        except Exception as e:
+            print(f"Error transcribing chunk {chunk}: {e}")
+        finally:
+            time.sleep(1)  # Add a delay before removing the file
+            os.remove(chunk)  # Clean up the chunk file
+    os.remove(audio_file_path)
     
-    return ""
+    return full_transcription
 
 
