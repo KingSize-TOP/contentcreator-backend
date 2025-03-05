@@ -364,9 +364,9 @@ def generate_similar_text(transcription, openai_api_key):
     openai.api_key = openai_api_key
     try:
         response = openai.chat.completions.create(
-            model="gpt-3.5-turbo",  # Use "gpt-3.5-turbo" or another available model
+            model="gpt-4o",  # Use "gpt-3.5-turbo" or another available model
             messages=[
-                {"role": "system", "content": "I want to generate similar text."},
+                {"role": "system", "content": "You are a helpful assistant. I want to generate text similar to the given text."},
                 {"role": "user", "content": transcription}
             ],
             max_tokens=150,
