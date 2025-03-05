@@ -653,6 +653,7 @@ def get_video_transcript(video_id: str):
 
 @app.post("/generate_text")
 def generate_text(request: TranscriptRequest):
+    print(request.transcription)
     similar_text = generate_similar_text(request.transcription, openai_api_key)
     return similar_text
 
