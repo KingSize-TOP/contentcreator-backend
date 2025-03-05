@@ -555,7 +555,7 @@ def get_instagram_videos(username: str):
         item = video.get('media', {})
         video_id = item.get("id")
         caption = item.get("caption", {})
-        video_title = caption.get("text")
+        video_title = caption.get("text") if caption else ""
         video_thumbnail = item.get("thumbnail_url")
         video_url = item.get("video_url")
         video_duration = item.get("video_duration", 0)
