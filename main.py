@@ -551,7 +551,8 @@ def get_instagram_videos(username: str):
             break  # Stop if there are no more videos available
 
     result = []
-    for item in all_videos:
+    for video in all_videos:
+        item = item.get('media', {})
         video_id = item.get("id")
         video_title = item.get("text", "")
         video_thumbnail = item.get("thumbnail_url")
