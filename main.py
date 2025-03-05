@@ -369,7 +369,7 @@ def generate_similar_text(transcription, openai_api_key):
                 {"role": "system", "content": "You are a helpful assistant. I want to generate text similar to the given text."},
                 {"role": "user", "content": transcription}
             ],
-            max_tokens=150,
+            max_tokens=1000,
             temperature=0.7,
             n=3
         )
