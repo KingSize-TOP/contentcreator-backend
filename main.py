@@ -531,12 +531,29 @@ def get_instagram_videos(username: str):
     cl = Client(hiker_api_key)
     user = cl.user_by_username_v1(username)
     user_id = user.get("pk")
-    videos = cl.user_clips_v1(user_id, 25)
-    print(videos)
+    all_videos = []
+    next_page_id = None
+
+    while True:
+        # Fetch videos using user_clips_v2
+        response = cl.user_clips_v2(user_id=user_id, page_id=next_page_id)
+        if not response or 'response' not in response:
+            break  # Stop if there's no valid response
+
+        items = response['response'].get('items', [])
+        all_videos.extend(items)  # Add the current batch of videos to the list
+        if len(all_videos) > 50:
+            break
+        # Check if more videos are available
+        paging_info = response['response'].get('paging_info', {})
+        next_page_id = paging_info.get('max_id')
+        if not paging_info.get('more_available'):
+            break  # Stop if there are no more videos available
+
     result = []
-    for item in videos:
+    for item in all_videos:
         video_id = item.get("id")
-        video_title = item.get("caption_text", "")
+        video_title = item.get("text", "")
         video_thumbnail = item.get("thumbnail_url")
         video_url = item.get("video_url")
         video_duration = item.get("video_duration", 0)
