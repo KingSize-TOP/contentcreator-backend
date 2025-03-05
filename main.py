@@ -40,6 +40,9 @@ class GenerateVideoRequest(BaseModel):
     avatar_id: str
     voice_id: str
 
+class TranscriptRequest(BaseModel):
+    transcription: str
+
 if not api_key or not openai_api_key or not heygen_key:
     raise HTTPException(status_code=500, detail="API keys are not configured properly")
 
@@ -628,9 +631,9 @@ def get_video_transcript(video_id: str):
     transcription = process_video(youtube_url, language_code)
     return transcription
 
-@app.get("/generate_text")
-def generate_text(transcription: str):
-    similar_text = generate_similar_text(transcription, openai_api_key)
+@app.post("/generate_text")
+def generate_text(request: TranscriptRequest):
+    similar_text = generate_similar_text(request.transcription, openai_api_key)
     return similar_text
 
 @app.post("/generate_video")
