@@ -39,6 +39,8 @@ class GenerateVideoRequest(BaseModel):
     text: str
     avatar_id: str
     voice_id: str
+    caption: bool
+    portrait: bool
 
 class TranscriptRequest(BaseModel):
     transcription: str
@@ -378,17 +380,20 @@ def generate_similar_text(transcription, openai_api_key):
 
     return [choice.message.content for choice in response.choices]
 
-def generate_avatar(transcription, avatar_id, voice_id, heygen_key):
+def generate_avatar(transcription, avatar_id, voice_id, caption, portrait, heygen_key):
     gen_avatar_url = "https://api.heygen.com/v2/video/generate"
     headers = {"accept": "application/json", "content-type": "application/json", "x-api-key": heygen_key}
+
+    # Set dimension based on portrait value
+    if portrait:
+        dimension = {"width": 720, "height": 1080}
+    else:
+        dimension = {"width": 1080, "height": 720}
     payload = {
-        "caption": False,
+        "caption": caption,
         "title": "string",
         "callback_id": "string",
-        "dimension": {
-            "width": 1280,
-            "height": 720
-        },
+        "dimension": dimension,
         "video_inputs": [
         {
             "character": {
@@ -506,10 +511,10 @@ def transcribe_audio(audio_path):
 tasks = {}
 
 # Background task function to generate the video
-def generate_video_task(task_id: str, text: str, avatar_id: str, voice_id: str):
+def generate_video_task(task_id: str, text: str, avatar_id: str, voice_id: str, caption: bool, portrait: bool):
     try:
         # Perform the long-running video generation
-        response = generate_avatar(text, avatar_id, voice_id, heygen_key)
+        response = generate_avatar(text, avatar_id, voice_id, caption, portrait, heygen_key)
         print(f"response: {response}")
         video_id = response.get("data").get("video_id")
         print(f"Video ID: {video_id}")
@@ -661,7 +666,7 @@ def generate_text(request: TranscriptRequest):
 def generate_video(request: GenerateVideoRequest, background_tasks: BackgroundTasks):
     task_id = str(uuid4())
     tasks[task_id] = {"status": "processing"}
-    background_tasks.add_task(generate_video_task, task_id, request.text, request.avatar_id, request.voice_id)
+    background_tasks.add_task(generate_video_task, task_id, request.text, request.avatar_id, request.voice_id, request.caption, request.portrait)
     return {"task_id": task_id}
 
 @app.get("/task_status/{task_id}")
