@@ -615,19 +615,19 @@ def get_instagram_short_videos(username: str):
 @app.get("/videos")
 def get_videos(profile_url: str, offset: int, limit: int):
     all_videos = get_sorted_videos(api_key, profile_url)
-    paginated_videos = all_videos[offset : offset + limit]
+    # paginated_videos = all_videos[offset : offset + limit]
     return {
-        "videos": paginated_videos,
-        "next_offset": offset + limit if offset + limit < len(all_videos) else None,
+        "videos": all_videos
+        # "next_offset": offset + limit if offset + limit < len(all_videos) else None,
     }
 
 @app.get("/short_videos")
 def get_short_videos_endpoint(profile_url: str, offset: int = 0, limit: int = 10):
     all_short_videos = get_short_videos(api_key, profile_url)
-    paginated_videos = all_short_videos[offset : offset + limit]
+    # paginated_videos = all_short_videos[offset : offset + limit]
     return {
-        "videos": paginated_videos,
-        "next_offset": offset + limit if offset + limit < len(all_short_videos) else None,
+        "videos": all_short_videos
+        # "next_offset": offset + limit if offset + limit < len(all_short_videos) else None,
     }
 
 @app.get("/transcript_video")
@@ -684,19 +684,19 @@ def fetch_voice_list():
 @app.get("/insta_videos")
 def fetch_insta_videos(username: str, offset: int, limit: int):
     all_videos = get_instagram_videos(username)
-    paginated_videos = all_videos[offset : offset + limit]
+    # paginated_videos = all_videos[offset : offset + limit]
     return {
-        "videos": paginated_videos,
-        "next_offset": offset + limit if offset + limit < len(all_videos) else None,
+        "videos": all_videos
+        # "next_offset": offset + limit if offset + limit < len(all_videos) else None,
     }
 
 @app.get("/insta_short_videos")
 def fetch_insta_short_videos(username: str, offset: int, limit: int):
     all_videos = get_instagram_short_videos(username)
-    paginated_videos = all_videos[offset : offset + limit]
+    # paginated_videos = all_videos[offset : offset + limit]
     return {
-        "videos": paginated_videos,
-        "next_offset": offset + limit if offset + limit < len(all_videos) else None,
+        "videos": all_videos
+        # "next_offset": offset + limit if offset + limit < len(all_videos) else None,
     }
 
 @app.get("/proxy-image")
