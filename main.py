@@ -436,7 +436,7 @@ def get_voice_list(heygen_key):
     response = requests.get(get_voice_url, headers=headers)
     return response.json()
 
-def check_video_status(heygen_key, video_id):
+def check_video_status(heygen_key, video_id, caption):
     status_url = f"https://api.heygen.com/v1/video_status.get?video_id={video_id}"
     headers = {"accept": "application/json", "x-api-key": heygen_key}
     while True:
@@ -447,7 +447,7 @@ def check_video_status(heygen_key, video_id):
             status = status_info.get('data').get('status')
             
             if status == "completed":
-                video_url = status_info.get('data').get('video_url')  # Assume this is the key for the video URL
+                video_url = status_info.get('data').get('video_url_caption') if caption else status_info.get('data').get('video_url')
                 print("Video generation completed.")
                 return video_url
             elif status == "processing":
@@ -518,7 +518,7 @@ def generate_video_task(task_id: str, text: str, avatar_id: str, voice_id: str, 
         print(f"response: {response}")
         video_id = response.get("data").get("video_id")
         print(f"Video ID: {video_id}")
-        video_url = check_video_status(heygen_key, video_id)
+        video_url = check_video_status(heygen_key, video_id, caption)
 
         # Update the task status and video URL
         tasks[task_id] = {"status": "completed", "video_url": video_url}
