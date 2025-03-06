@@ -386,9 +386,9 @@ def generate_avatar(transcription, avatar_id, voice_id, caption, portrait, heyge
 
     # Set dimension based on portrait value
     if portrait:
-        dimension = {"width": 720, "height": 1080}
+        dimension = {"width": 720, "height": 1280}
     else:
-        dimension = {"width": 1080, "height": 720}
+        dimension = {"width": 1280, "height": 720}
     payload = {
         "caption": caption,
         "title": "string",
