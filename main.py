@@ -679,6 +679,7 @@ def get_task_status(task_id: str):
 @app.get("/avatar_list")
 def fetch_avatar_list():
     response = get_avatar_list(heygen_key)
+    print(response);
     return response.get("data").get("avatars")
 
 @app.get("/voice_list")
