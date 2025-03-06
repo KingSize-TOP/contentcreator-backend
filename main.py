@@ -613,7 +613,7 @@ def get_instagram_short_videos(username: str):
     return sorted_videos
 
 @app.get("/videos")
-def get_videos(profile_url: str, offset: int, limit: int):
+def get_videos(profile_url: str):
     all_videos = get_sorted_videos(api_key, profile_url)
     # paginated_videos = all_videos[offset : offset + limit]
     return {
@@ -622,7 +622,7 @@ def get_videos(profile_url: str, offset: int, limit: int):
     }
 
 @app.get("/short_videos")
-def get_short_videos_endpoint(profile_url: str, offset: int = 0, limit: int = 10):
+def get_short_videos_endpoint(profile_url: str):
     all_short_videos = get_short_videos(api_key, profile_url)
     # paginated_videos = all_short_videos[offset : offset + limit]
     return {
@@ -682,7 +682,7 @@ def fetch_voice_list():
     return response.get("data").get("voices")
 
 @app.get("/insta_videos")
-def fetch_insta_videos(username: str, offset: int, limit: int):
+def fetch_insta_videos(username: str):
     all_videos = get_instagram_videos(username)
     # paginated_videos = all_videos[offset : offset + limit]
     return {
@@ -691,7 +691,7 @@ def fetch_insta_videos(username: str, offset: int, limit: int):
     }
 
 @app.get("/insta_short_videos")
-def fetch_insta_short_videos(username: str, offset: int, limit: int):
+def fetch_insta_short_videos(username: str):
     all_videos = get_instagram_short_videos(username)
     # paginated_videos = all_videos[offset : offset + limit]
     return {
