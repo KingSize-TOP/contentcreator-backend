@@ -483,7 +483,7 @@ def check_video_status(heygen_key, video_id, caption):
                 print("Video is still pending. Checking again in 30 seconds...")
                 time.sleep(30)  # Wait before checking again
             else:
-                raise Exception(f"Video generation failed or encountered an unknown status: {status}")
+                raise Exception(f"Video generation failed or encountered an unknown status: {status}, {status_info.get('data')}")
         else:
             raise Exception(f"Failed to check video status. Status: {response.status_code}, Response: {response.text}")
 
