@@ -420,7 +420,6 @@ def generate_avatar(transcription, avatar_id, voice_id, caption, portrait, heyge
         "callback_url": "string"
     }
     response = requests.post(gen_avatar_url, json=payload, headers=headers)
-    print(transcription)
     print(response.text)
     return response.json()
 
@@ -429,6 +428,30 @@ def get_avatar_list(heygen_key):
     headers = {"accept": "application/json", "x-api-key": heygen_key}
     response = requests.get(get_avatar_url, headers=headers)
     return response.json()
+
+def get_ugc_avatar(heygen_key):
+    get_avatar_group_url = "https://api.heygen.com/v2/avatar_group.list"
+    headers = {"accept": "application/json", "x-api-key": heygen_key}
+    response = requests.get(get_avatar_group_url, headers=headers)
+    avatar_group_list = response.json().get("data", {}).get("avatar_group_list", [])
+
+    if not avatar_group_list:
+        print("No avatar groups found.")
+        return []
+
+    all_avatars = []
+
+    for group in avatar_group_list:
+        group_id = group.get("id")
+        if not group_id:
+            continue
+
+        get_avatar_url = f"https://api.heygen.com/v2/avatar_group/{group_id}/avatars"
+        avatars_response = requests.get(get_avatar_url, headers=headers)
+        avatars = avatars_response.json().get("data", {}).get("avatar_list", [])
+        all_avatars.extend(avatars)
+
+    return all_avatars
 
 def get_voice_list(heygen_key):
     get_voice_url = "https://api.heygen.com/v2/voices"
@@ -679,8 +702,12 @@ def get_task_status(task_id: str):
 @app.get("/avatar_list")
 def fetch_avatar_list():
     response = get_avatar_list(heygen_key)
-    print(response);
     return response.get("data").get("avatars")
+
+@app.get("/ugc_avatar_list")
+def fetch_ugc_avatar_list():
+    response = get_ugc_avatar(heygen_key)
+    return response
 
 @app.get("/voice_list")
 def fetch_voice_list():
