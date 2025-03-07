@@ -792,7 +792,7 @@ async def insta_transcript(url: str):
 @app.get("/download_video")
 async def download_video(video_url: str):
     response = requests.get(video_url)
-    
+    output_filename = "avatar.mp4"
     if response.status_code == 200:
         with open(output_filename, 'wb') as video_file:
             video_file.write(response.content)
