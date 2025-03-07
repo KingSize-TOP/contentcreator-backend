@@ -430,7 +430,7 @@ def get_avatar_list(heygen_key):
     return response.json()
 
 def get_ugc_avatar(heygen_key):
-    get_avatar_group_url = "https://api.heygen.com/v2/avatar_group.list"
+    get_avatar_group_url = "https://api.heygen.com/v2/avatar_group.list?include_public=false"
     headers = {"accept": "application/json", "x-api-key": heygen_key}
     response = requests.get(get_avatar_group_url, headers=headers)
     avatar_group_list = response.json().get("data", {}).get("avatar_group_list", [])
