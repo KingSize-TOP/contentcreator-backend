@@ -498,21 +498,21 @@ def check_video_status(heygen_key, video_id, caption):
 #     else:
 #         raise Exception(f"Failed to download video. Status: {response.status_code}, Response: {response.text}")
 
-def download_video(video_url, output_filename):
-    headers = {
-        "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/91.0.4472.124 Safari/537.36",
-        "Referer": "https://www.instagram.com/"
-    }
+# def download_video(video_url, output_filename):
+#     headers = {
+#         "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/91.0.4472.124 Safari/537.36",
+#         "Referer": "https://www.instagram.com/"
+#     }
     
-    response = requests.get(video_url, headers=headers, stream=True)
+#     response = requests.get(video_url, headers=headers, stream=True)
     
-    if response.status_code == 200:
-        with open(output_filename, 'wb') as video_file:
-            for chunk in response.iter_content(chunk_size=1024):
-                video_file.write(chunk)
-        print(f"Video downloaded successfully as {output_filename}.")
-    else:
-        raise Exception(f"Failed to download video. Status: {response.status_code}, Response: {response.text}")
+#     if response.status_code == 200:
+#         with open(output_filename, 'wb') as video_file:
+#             for chunk in response.iter_content(chunk_size=1024):
+#                 video_file.write(chunk)
+#         print(f"Video downloaded successfully as {output_filename}.")
+#     else:
+#         raise Exception(f"Failed to download video. Status: {response.status_code}, Response: {response.text}")
 
 def extract_audio(video_path, audio_output_path="audio.mp3"):
     command = [
@@ -789,4 +789,19 @@ async def insta_transcript(url: str):
     
     return full_transcription
 
-
+@app.get("/download_video")
+async def download_video(video_url: str):
+    headers = {
+        "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/91.0.4472.124 Safari/537.36",
+        "Referer": "https://www.instagram.com/"
+    }
+    
+    response = requests.get(video_url, headers=headers, stream=True)
+    
+    if response.status_code == 200:
+        with open(output_filename, 'wb') as video_file:
+            for chunk in response.iter_content(chunk_size=1024):
+                video_file.write(chunk)
+        print(f"Video downloaded successfully as {output_filename}.")
+    else:
+        raise Exception(f"Failed to download video. Status: {response.status_code}, Response: {response.text}")
