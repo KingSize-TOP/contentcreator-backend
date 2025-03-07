@@ -791,14 +791,30 @@ async def insta_transcript(url: str):
 
 @app.get("/download_video")
 async def download_video(video_url: str):
-    response = requests.get(video_url)
-    output_file = "avatar.mp4"
-    if response.status_code == 200:
-        # Save the video to a file
-        with open(output_file, "wb") as file:
-            for chunk in response.iter_content(chunk_size=8192):
-                file.write(chunk)
-        print(f"Video downloaded successfully and saved as {output_file}")
-    else:
-        # Raise an error if the response is not successful
-        raise Exception(f"Failed to download video. Status: {response.status_code}, Response: {response.text}")
+    """
+    Downloads a video from the given URL and saves it as `avatar.mp4`.
+    """
+    try:
+        # Mimic browser headers to bypass restrictions
+        headers = {
+            "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/110.0.0.0 Safari/537.36"
+        }
+
+        # Send GET request with headers
+        response = requests.get(video_url, headers=headers, stream=True)
+
+        # Check if the request is successful
+        if response.status_code == 200:
+            output_file = "avatar.mp4"  # The output file name
+            with open(output_file, "wb") as file:
+                for chunk in response.iter_content(chunk_size=8192):  # Stream the content in chunks
+                    file.write(chunk)
+            return {"message": f"Video downloaded successfully and saved as {output_file}"}
+        else:
+            # Handle failed requests
+            raise HTTPException(
+                status_code=response.status_code,
+                detail=f"Failed to download video. Response: {response.text}"
+            )
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=f"Error downloading video: {str(e)}")
