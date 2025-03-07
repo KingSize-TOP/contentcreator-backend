@@ -792,10 +792,13 @@ async def insta_transcript(url: str):
 @app.get("/download_video")
 async def download_video(video_url: str):
     response = requests.get(video_url)
-    output_filename = "avatar.mp4"
+    output_file = "avatar.mp4"
     if response.status_code == 200:
-        with open(output_filename, 'wb') as video_file:
-            video_file.write(response.content)
-        print(f"Video downloaded successfully as {output_filename}.")
+        # Save the video to a file
+        with open(output_file, "wb") as file:
+            for chunk in response.iter_content(chunk_size=8192):
+                file.write(chunk)
+        print(f"Video downloaded successfully and saved as {output_file}")
     else:
+        # Raise an error if the response is not successful
         raise Exception(f"Failed to download video. Status: {response.status_code}, Response: {response.text}")
